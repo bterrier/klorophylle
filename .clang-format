@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# One naming/style convention for the whole tree (kills the PascalCase/snake_case
+# split). Close to Qt's own style.
+BasedOnStyle: WebKit
+Standard: c++20
+ColumnLimit: 110
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+PointerAlignment: Right
+NamespaceIndentation: None
+AllowShortFunctionsOnASingleLine: Inline
+SortIncludes: false

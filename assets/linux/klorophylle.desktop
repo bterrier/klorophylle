@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Klorophylle
+Comment=Plant-first monitoring for Bluetooth Low Energy soil & climate sensors
+Exec=klorophylle
+Icon=klorophylle
+Categories=Utility;DataVisualization;Qt;

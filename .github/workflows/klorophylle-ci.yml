@@ -1,0 +1,58 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Primary CI for the repository. The app builds at the top level and this gates
+# every push and PR. CI actually RUNS the tests (not just builds), so regressions
+# surface here.
+name: klorophylle-ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Cancel an in-flight run when a newer commit is pushed to the same ref.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  linux:
+    runs-on: ubuntu-24.04
+    env:
+      # Headless runner: test_theme constructs a QGuiApplication.
+      QT_QPA_PLATFORM: offscreen
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Qt 6.10
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.10.3'
+          # qtconnectivity: BLE advertisement scanning.
+          # qtgraphs: history charts; it pulls qtquick3d, which in turn needs
+          # qtshadertools (Quick3DRuntimeRender -> ShaderTools).
+          modules: 'qtconnectivity qtgraphs qtquick3d qtshadertools'
+          cache: true
+
+      - name: Configure
+        run: cmake -B build -G Ninja
+
+      - name: Build
+        run: cmake --build build
+
+      - name: Test (ctest)
+        run: ctest --test-dir build --output-on-failure
+
+      # Hard gate: the module's qmllint target carries the import paths, so this
+      # catches unqualified access AND any setContextProperty regression
+      # Verified clean locally on Qt 6.10.3.
+      - name: qmllint
+        run: cmake --build build --target all_qmllint
+
+      # Extraction gate (docs/adr/0019 §1): karness must configure and build as
+      # a TOP-LEVEL project with nothing but Qt on the prefix path — no klr_*,
+      # no parent project. Keeps "extractable one day" mechanically true.
+      - name: karness standalone build
+        run: |
+          cmake -B build-karness -G Ninja -S src/karness
+          cmake --build build-karness

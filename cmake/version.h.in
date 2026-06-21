@@ -1,0 +1,8 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+#pragma once
+
+// Generated from cmake/version.h.in — the single source of version truth.
+#define KLR_VERSION_STR   "@PROJECT_VERSION@"
+#define KLR_VERSION_MAJOR @PROJECT_VERSION_MAJOR@
+#define KLR_VERSION_MINOR @PROJECT_VERSION_MINOR@
+#define KLR_VERSION_PATCH @PROJECT_VERSION_PATCH@

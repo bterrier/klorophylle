@@ -1,0 +1,31 @@
+# Build trees & binaries (build via Qt Creator or out-of-source; never committed)
+/build/
+build*/
+/bin/
+
+# Qt Creator / IDE
+*.user
+*.user.*
+CMakeLists.txt.user*
+.qmake.stash
+.qtc_clangd/
+.idea
+.vscode
+
+# Tooling
+.cache/
+compile_commands.json
+
+# Claude Code / local agent config
+.claude/
+.mcp.json
+
+# Shell / sandbox artifacts
+.bash_profile
+.bashrc
+.gitconfig
+.gitmodules
+.profile
+.ripgreprc
+.zprofile
+.zshrc

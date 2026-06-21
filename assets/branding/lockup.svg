@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="900" height="760" viewBox="0 0 900 760" xmlns="http://www.w3.org/2000/svg">
+  <g transform="translate(270.770,42.351) scale(0.88940)"><g xmlns="http://www.w3.org/2000/svg" /><g xmlns="http://www.w3.org/2000/svg" transform="translate(-748.37 -283.28)"><path d="m821.99 456.04s33.843-25.904 42.958-37.299c16.443-16.428 69.421-119.47 69.421-119.47h84s-31.246 20.929-46.577 41.689-25.564 65-39.256 84.008-34.687 32.928-34.687 32.928l-32.059-2.1464z" fill="#00cfff" /><path d="m764.37 299.28v193.15c10.069-26.351 43.552-50.784 64-60.89v-132.26z" fill="#39a339" /><path d="m764.37 644.28h64v-107c0-15.381 18.077-33.646 29.828-33.646 11.713 0 16.081 10.345 16.081 10.345l75.09 130.3h74l-97.24-161.3s-20.645-34.285-67.932-34.285c-65.307-0.0967-93.828 62.694-93.828 97.532z" fill="#004d36" /><path d="m1123.6 394.58h-64.709l-37.522 38.146 61.914 0.72851 0.6582 13.959h-75.137l-52.58 54.83s95.832 4.059 135.08-32.617c15.572-14.55 25.715-44.367 32.291-75.047z" fill="#004d36" /><path d="m1135.4 299.28s-120.97 19.527-154.63 58.254c-33.665 38.727-28.902 127.53-28.902 127.53l49.795-51.99 0.5469-68.855 12.547 0.17969 1.3984 52.627 34.707-35.701-0.6504-50.518 11.297-0.36328 2.127 35.85 40.416-38.863 10.143 9.6894-42.652 44.205h37.822v13.264h14.295c9.9997-46.655 11.744-95.307 11.744-95.307z" fill="#39a339" /></g></g>
+  <!-- Editable source: wordmark uses the Montserrat display family. For a
+       self-contained asset use lockup-outlined.svg (text converted to paths). -->
+  <text x="450" y="600" font-family="Montserrat" font-weight="700" font-size="92"
+        letter-spacing="1" text-anchor="middle" fill="#003423">KLOROPHYLLE</text>
+  <text x="450" y="663" font-family="Montserrat" font-weight="600" font-size="32"
+        letter-spacing="16" text-anchor="middle" fill="#39a339">PLANT MONITOR</text>
+</svg>
