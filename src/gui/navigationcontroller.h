@@ -44,6 +44,11 @@ public:
         Live,
         SensorDetail,
         Settings,
+        // A single category page (Appearance/Units/Notifications/Sensors/AI/Data) of the
+        // Settings index, carrying a string `which` arg in the push args map (e.g. {which:"ai"}).
+        // One parameterized route, not one route per category — the page switches on `which`.
+        // Full-width like Settings; lets the AI screen deep-link to its own settings page.
+        SettingsCategory,
         Export,
         About,
         AIInsights, // the AI assistant chat — a full-width page, like Settings
@@ -96,8 +101,8 @@ private:
     static bool isSection(Route r) { return r == Route::Plants || r == Route::Sensors; }
     static bool isFullPage(Route r)
     {
-        return r == Route::Settings || r == Route::Export || r == Route::About
-            || r == Route::AIInsights || r == Route::GlobalJournal;
+        return r == Route::Settings || r == Route::SettingsCategory || r == Route::Export
+            || r == Route::About || r == Route::AIInsights || r == Route::GlobalJournal;
     }
 
     QList<QPair<Route, QVariantMap>> m_stack{ { Route::Plants, {} } };

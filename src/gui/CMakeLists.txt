@@ -26,6 +26,13 @@ qt_add_qml_module(klr_gui
         qml/DuplicateDialog.qml
         qml/NavRail.qml
         qml/SettingsScreen.qml
+        qml/SettingsCategoryScreen.qml
+        qml/AppearanceSettings.qml
+        qml/UnitsSettings.qml
+        qml/NotificationSettings.qml
+        qml/SensorSettings.qml
+        qml/AiSettings.qml
+        qml/DataSettings.qml
         qml/AboutScreen.qml
         qml/ExportScreen.qml
         qml/AIInsightsScreen.qml

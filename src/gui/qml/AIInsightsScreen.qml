@@ -43,6 +43,16 @@ Item {
                 flat: true
                 onClicked: NavigationController.push(NavigationController.GlobalJournal)
             }
+            // Deep-link straight to the AI settings page (one parameterized SettingsCategory
+            // route). push (not goPage), so Back returns to the conversation.
+            Button {
+                text: qsTr("AI settings")
+                icon.name: "settings"
+                icon.color: Theme.colorAI
+                flat: true
+                onClicked: NavigationController.push(NavigationController.SettingsCategory,
+                                                    { which: "ai" })
+            }
             Item { Layout.fillWidth: true }
             Button {
                 text: qsTr("New conversation")
@@ -62,6 +72,15 @@ Item {
             font.pixelSize: Theme.fontSizeLabel
             text: qsTr("The AI assistant is turned off, or no model is set. Configure an endpoint "
                        + "and model in Settings → AI assistant.")
+        }
+        // One tap from the hint straight to the AI settings page.
+        Button {
+            visible: !root.agent.ready
+            text: qsTr("Open AI settings")
+            icon.name: "settings"
+            icon.color: Theme.colorAI
+            onClicked: NavigationController.push(NavigationController.SettingsCategory,
+                                                { which: "ai" })
         }
 
         ListView {

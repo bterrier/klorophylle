@@ -67,6 +67,30 @@ private slots:
         QCOMPARE(pushed2.size(), 1);
     }
 
+    void settingsCategoryIsParameterizedAndFullPage()
+    {
+        NavigationController nav;
+        QSignalSpy pushed(&nav, &NavigationController::pushed);
+
+        // The Settings index deep-links to a single category page via one parameterized route.
+        nav.push(Route::SettingsCategory, QVariantMap{ { QStringLiteral("which"), QStringLiteral("ai") } });
+        QCOMPARE(nav.currentRoute(), Route::SettingsCategory);
+        QVERIFY(nav.currentIsFullPage()); // full-width like Settings — master pane hides
+        QCOMPARE(pushed.size(), 1);
+        QCOMPARE(pushed.first().at(1).toMap().value(QStringLiteral("which")).toString(),
+                 QStringLiteral("ai"));
+
+        // A different category is a genuinely different page (distinct args) — it still pushes,
+        // so navigating index -> Units -> back -> AI works.
+        nav.push(Route::SettingsCategory, QVariantMap{ { QStringLiteral("which"), QStringLiteral("units") } });
+        QCOMPARE(pushed.size(), 2);
+        QCOMPARE(nav.currentRoute(), Route::SettingsCategory);
+
+        // The same category re-pushed (e.g. tapping the same row again) is idempotent.
+        nav.push(Route::SettingsCategory, QVariantMap{ { QStringLiteral("which"), QStringLiteral("units") } });
+        QCOMPARE(pushed.size(), 2);
+    }
+
     void popReversesAndStopsAtRoot()
     {
         NavigationController nav;

@@ -58,6 +58,7 @@ ApplicationWindow {
         case NavigationController.Live: return liveComponent;
         case NavigationController.SensorDetail: return sensorDetailComponent;
         case NavigationController.Settings: return settingsComponent;
+        case NavigationController.SettingsCategory: return settingsCategoryComponent;
         case NavigationController.Export: return exportComponent;
         case NavigationController.About: return aboutComponent;
         case NavigationController.AIInsights: return aiInsightsComponent;
@@ -175,6 +176,7 @@ ApplicationWindow {
     Component { id: liveComponent; LiveScreen {} }
     Component { id: sensorDetailComponent; SensorDetailScreen {} }
     Component { id: settingsComponent; SettingsScreen {} }
+    Component { id: settingsCategoryComponent; SettingsCategoryScreen {} }
     Component { id: exportComponent; ExportScreen {} }
     Component { id: aboutComponent; AboutScreen {} }
     Component { id: aiInsightsComponent; AIInsightsScreen {} }
