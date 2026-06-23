@@ -301,6 +301,51 @@ private slots:
             QVERIFY(message.role != Role::System);
     }
 
+    void primedHistoryIsSentAndAppendedTo()
+    {
+        // Resuming a persisted conversation: seeded prior turns must reach the model on the next
+        // send (so it has context), sit before the new user message, and the system prompt stays
+        // the leading invariant.
+        FakeProvider fake;
+        fake.setScript({{{doneText(QStringLiteral("continuing"))}}});
+        AgentSession session(fake, QStringLiteral("System."));
+
+        session.primeHistory({Message{Role::User, {TextBlock{QStringLiteral("earlier question")}}},
+                              Message{Role::Assistant, {TextBlock{QStringLiteral("earlier answer")}}}});
+        QCOMPARE(session.history().size(), 2);
+
+        QVERIFY(session.send(QStringLiteral("follow-up")).has_value());
+        QVERIFY(waitIdle(session));
+
+        const InferenceRequest &request = fake.requests().first();
+        // System, prior user, prior assistant, new user.
+        QCOMPARE(request.messages.size(), 4);
+        QCOMPARE(request.messages.at(0).role, Role::System);
+        QCOMPARE(std::get<TextBlock>(request.messages.at(1).blocks.first()).text,
+                 QStringLiteral("earlier question"));
+        QCOMPARE(std::get<TextBlock>(request.messages.at(2).blocks.first()).text,
+                 QStringLiteral("earlier answer"));
+        QCOMPARE(request.messages.at(3).role, Role::User);
+        QCOMPARE(std::get<TextBlock>(request.messages.at(3).blocks.first()).text,
+                 QStringLiteral("follow-up"));
+    }
+
+    void primeHistoryIgnoredOnceUsed()
+    {
+        // Idempotency guard: priming only seeds an untouched session — never clobbers live history.
+        FakeProvider fake;
+        fake.setScript({{{doneText(QStringLiteral("ok"))}}});
+        AgentSession session(fake);
+        session.primeHistory({Message{Role::User, {TextBlock{QStringLiteral("first")}}}});
+        QCOMPARE(session.history().size(), 1);
+        // A second prime over non-empty history is a no-op.
+        session.primeHistory({Message{Role::User, {TextBlock{QStringLiteral("other")}}},
+                              Message{Role::Assistant, {TextBlock{QStringLiteral("other")}}}});
+        QCOMPARE(session.history().size(), 1);
+        QCOMPARE(std::get<TextBlock>(session.history().first().blocks.first()).text,
+                 QStringLiteral("first"));
+    }
+
     void ambientPrependedToLatestUserNeverStored()
     {
         FakeProvider fake;

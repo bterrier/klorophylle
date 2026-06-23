@@ -66,6 +66,14 @@ public:
     // Model/sampling/reasoning knobs. The session owns messages and tools and
     // assembles the full InferenceRequest itself, so only the knobs are set here.
     void setModelConfig(ModelConfig config);
+    // Seed prior conversation history before the first send — for resuming a persisted
+    // conversation so the model continues with full context, not a blank slate. Only valid on
+    // an untouched, idle session (no turn in flight, empty history); ignored otherwise. The
+    // seeded messages must be complete turns (no dangling ToolCall, which is invalid wire
+    // history on every dialect) — a persisted transcript, which stores only finished turns,
+    // satisfies this. The system prompt stays the construction-time invariant and is never
+    // part of the seeded history.
+    void primeHistory(QList<Message> history);
 
     // Synchronous preconditions as values: a turn already in flight ->
     // Code::Provider, provider !isReady() -> Code::NotReady. Everything

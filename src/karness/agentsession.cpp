@@ -46,6 +46,15 @@ void AgentSession::setModelConfig(ModelConfig config)
     m_modelConfig = std::move(config);
 }
 
+void AgentSession::primeHistory(QList<Message> history)
+{
+    // Only on an untouched, idle session: seeding mid-turn or over live history would corrupt
+    // the rollback baseline and the wire history. Resuming happens before any send().
+    if (m_turn || !m_history.isEmpty())
+        return;
+    m_history = std::move(history);
+}
+
 std::expected<void, AgentError> AgentSession::send(const QString &userText)
 {
     return send(Message{Role::User, {TextBlock{userText}}});

@@ -226,7 +226,15 @@ void AgentViewModel::ensureSession()
             &AgentViewModel::busyChanged);
 
     m_sessionDirty = false;
-    m_persistedCount = 0; // a fresh session starts with empty history
+
+    // Resume context: seed the fresh session with the conversation's already-persisted messages,
+    // so a reopened conversation (or one whose session was rebuilt after a settings change)
+    // continues with full model context — not just restored display rows. They are already
+    // stored, so they form the persisted baseline; only NEW turns are appended by
+    // persistNewTurn(). The system prompt stays the session's construction-time invariant.
+    QList<karness::Message> priorHistory = transcript::load(m_transcripts, m_conversation);
+    m_persistedCount = static_cast<int>(priorHistory.size());
+    m_session->primeHistory(std::move(priorHistory));
 }
 
 int AgentViewModel::rowCount(const QModelIndex &parent) const

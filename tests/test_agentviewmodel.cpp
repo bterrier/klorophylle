@@ -170,6 +170,44 @@ private slots:
         }
     }
 
+    void resumedConversationReplaysHistoryToModel()
+    {
+        // Reopening the app and continuing a conversation must give the MODEL the prior turns,
+        // not only restore the display rows. Persist a turn, then build a fresh view-model over
+        // the same repositories (= relaunch) and assert the next request carries the history.
+        Harness h;
+        h.script = { { { doneText(QStringLiteral("first answer")) } } };
+        {
+            auto vm1 = h.makeVm();
+            vm1->sendMessage(QStringLiteral("first question"));
+            QTRY_VERIFY(!vm1->busy());
+            QCOMPARE(vm1->rowCount(), 2);
+        } // vm1 gone; the finished turn is persisted in h.transcripts
+
+        h.script = { { { doneText(QStringLiteral("second answer")) } } };
+        auto vm2 = h.makeVm();
+        QCOMPARE(vm2->rowCount(), 2); // display rows restored from the transcript
+
+        vm2->sendMessage(QStringLiteral("second question"));
+        QTRY_VERIFY(!vm2->busy());
+
+        // The fresh session's request must contain the prior user + assistant turn.
+        const InferenceRequest &req = h.provider->requests().first();
+        bool sawPriorQuestion = false;
+        bool sawPriorAnswer = false;
+        for (const Message &m : req.messages)
+            for (const ContentBlock &b : m.blocks)
+                if (const auto *t = std::get_if<TextBlock>(&b)) {
+                    sawPriorQuestion = sawPriorQuestion || t->text.contains(QStringLiteral("first question"));
+                    sawPriorAnswer = sawPriorAnswer || t->text.contains(QStringLiteral("first answer"));
+                }
+        QVERIFY(sawPriorQuestion);
+        QVERIFY(sawPriorAnswer);
+
+        // And the resumed turn is persisted once — no duplication of the seeded baseline.
+        QCOMPARE(h.persisted().size(), 4); // q1, a1, q2, a2
+    }
+
     void toolCallLoopRendersRows()
     {
         Harness h;
