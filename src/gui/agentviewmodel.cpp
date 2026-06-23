@@ -462,6 +462,11 @@ void AgentViewModel::onTurnFailed(const karness::AgentError &error)
 {
     setStreamingText({});
     setStreamingReasoning({});
+    // Log the raw, untruncated provider error to the terminal: the in-chat row is humanized and
+    // (today) unselectable, so this is the copy-pasteable record for diagnosing provider failures
+    // (e.g. a Gemini "Unknown name" schema rejection). Friendlier in-UI surfacing is a follow-up.
+    qWarning("AgentViewModel turn failed: code=%d httpStatus=%d message=%s", int(error.code),
+             error.httpStatus.value_or(0), qUtf8Printable(error.message));
     const QString message = humanError(error);
     appendRow(ChatRow{ ErrorKind, message, {}, false });
     setLastError(message);
