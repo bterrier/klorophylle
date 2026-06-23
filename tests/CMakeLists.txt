@@ -201,6 +201,10 @@ qt_add_executable(test_format test_format.cpp)
 target_link_libraries(test_format PRIVATE Qt6::Test klr_style klr_core)
 add_test(NAME test_format COMMAND test_format)
 
+qt_add_executable(test_providerdescriptor test_providerdescriptor.cpp)
+target_link_libraries(test_providerdescriptor PRIVATE Qt6::Test klr_gui klr_style klr_core)
+add_test(NAME test_providerdescriptor COMMAND test_providerdescriptor)
+
 qt_add_executable(test_journalformat test_journalformat.cpp)
 target_link_libraries(test_journalformat PRIVATE Qt6::Test klr_gui klr_core)
 add_test(NAME test_journalformat COMMAND test_journalformat)

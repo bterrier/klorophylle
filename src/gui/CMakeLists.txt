@@ -32,6 +32,7 @@ qt_add_qml_module(klr_gui
         qml/NotificationSettings.qml
         qml/SensorSettings.qml
         qml/AiSettings.qml
+        qml/AiSetupWizard.qml
         qml/DataSettings.qml
         qml/AboutScreen.qml
         qml/ExportScreen.qml
@@ -58,6 +59,7 @@ qt_add_qml_module(klr_gui
         seriesmodel.h seriesmodel.cpp
         journalformat.h journalformat.cpp
         buildinfo.h buildinfo.cpp
+        providerdescriptor.h providerdescriptor.cpp
         agentviewmodel.h agentviewmodel.cpp
 )
 

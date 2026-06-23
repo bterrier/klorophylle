@@ -12,6 +12,7 @@
 #include "iwebfetcher.h"
 #include "message.h"
 #include "openaicompatprovider.h"
+#include "providerdescriptor.h"
 #include "responsesprovider.h"
 #include "settingsstore.h"
 #include "transcript.h"
@@ -177,7 +178,7 @@ void AgentViewModel::ensureSession()
         return;
 
     karness::ProviderConfig cfg;
-    cfg.baseUrl = QUrl(m_settings.agentBaseUrl());
+    cfg.baseUrl = effectiveBaseUrl();
     if (const std::optional<QString> key = m_secrets.secret(QStringLiteral("agent/apiKey")))
         cfg.apiKey = *key;
     cfg.caps = karness::ModelCaps{ /*toolCalling*/ true,
@@ -322,9 +323,30 @@ void AgentViewModel::doSend(const QString &text)
     emit busyChanged();
 }
 
+QUrl AgentViewModel::effectiveBaseUrl() const
+{
+    const ProviderDescriptor &d = klr::providerDescriptor(m_settings.agentProviderType());
+    return d.fixedEndpoint.isEmpty() ? QUrl(m_settings.agentBaseUrl()) : QUrl(d.fixedEndpoint);
+}
+
+QVariantMap AgentViewModel::providerDescriptor(int type) const
+{
+    const ProviderDescriptor &d = klr::providerDescriptor(type);
+    return QVariantMap{
+        { QStringLiteral("displayName"), d.displayName },
+        { QStringLiteral("fixedEndpoint"), d.fixedEndpoint },
+        { QStringLiteral("needsKey"), d.needsKey },
+        { QStringLiteral("keyUrl"), d.keyUrl },
+        { QStringLiteral("defaultModel"), d.defaultModel },
+        { QStringLiteral("knownModels"), d.knownModels },
+        { QStringLiteral("textOnlyModels"), d.textOnlyModels },
+        { QStringLiteral("freeTierUrl"), d.freeTierUrl },
+    };
+}
+
 bool AgentViewModel::endpointIsRemote() const
 {
-    const QString host = QUrl(m_settings.agentBaseUrl()).host();
+    const QString host = effectiveBaseUrl().host();
     return !(host.isEmpty() || host == QStringLiteral("localhost")
              || host == QStringLiteral("127.0.0.1") || host == QStringLiteral("::1"));
 }

@@ -12,6 +12,7 @@
 #include <QtCore/QList>
 #include <QtCore/QString>
 #include <QtCore/QStringList>
+#include <QtCore/QVariantMap>
 #include <QtQml/qqmlregistration.h>
 
 #include <functional>
@@ -125,6 +126,10 @@ public:
     // Store (or clear, when empty) the remote-provider API key via the ISecretStore seam — never
     // QSettings (ADR 0019 decision 9). Rebuilds the provider on the next send so the key takes.
     Q_INVOKABLE void setApiKey(const QString &key);
+    // The onboarding descriptor for a provider-type index as a plain map for QML (ADR 0027): the
+    // AI settings screen reads fixedEndpoint/needsKey/keyUrl/knownModels/… off it to adapt fields,
+    // seed model autocomplete and show key/free-tier links. A thin bridge over providerDescriptor().
+    Q_INVOKABLE QVariantMap providerDescriptor(int type) const;
 
 signals:
     void busyChanged();
@@ -146,6 +151,10 @@ private:
     };
 
     void ensureSession();
+    // The provider's effective base URL: the descriptor's fixed endpoint for a cloud provider,
+    // else the user-configured agentBaseUrl (ADR 0027). Drives both the provider config and the
+    // remote-endpoint notice, so a fixed cloud endpoint is recognised as remote.
+    QUrl effectiveBaseUrl() const;
     void doSend(const QString &text);
     void onTextDelta(const QString &text);
     void onReasoningDelta(const QString &text);

@@ -20,6 +20,8 @@
 #include "plant.h"
 #include "settingsstore.h"
 
+#include <QtCore/QUrl>
+
 using namespace klr;
 using namespace karness;
 
@@ -71,11 +73,15 @@ struct Harness {
     SettingsStore settings{ &kv };
     QList<FakeProvider::ScriptedTurn> script;
     FakeProvider *provider = nullptr;
+    QUrl lastBaseUrl;          // the ProviderConfig.baseUrl the factory last saw
+    int lastProviderType = -1; // the provider-type index the factory last saw
 
     std::unique_ptr<AgentViewModel> makeVm()
     {
-        auto factory = [this](int /*providerType*/,
-                              const ProviderConfig &) -> std::unique_ptr<IProvider> {
+        auto factory = [this](int providerType,
+                              const ProviderConfig &cfg) -> std::unique_ptr<IProvider> {
+            lastProviderType = providerType;
+            lastBaseUrl = cfg.baseUrl;
             auto p = std::make_unique<FakeProvider>();
             p->setScript(script);
             provider = p.get();
@@ -130,6 +136,38 @@ private slots:
 
         // user + assistant persisted to the transcript.
         QCOMPARE(h.persisted().size(), 2);
+    }
+
+    void cloudProvidersUseTheirFixedEndpoint()
+    {
+        // ADR 0027: a cloud provider talks to its descriptor's fixed endpoint regardless of the
+        // user's agentBaseUrl (which keeps its local-Ollama default). Only OpenAI-compatible uses
+        // agentBaseUrl. Guards against the latent "Gemini silently inherits the Ollama URL" bug.
+        struct Case {
+            int type;
+            QString expectedHost;
+            bool remote;
+        };
+        const Case cases[] = {
+            { 0, QStringLiteral("localhost"), false },          // OpenAI-compatible -> agentBaseUrl
+            { 1, QStringLiteral("api.openai.com"), true },      // OpenAI Responses
+            { 2, QStringLiteral("api.anthropic.com"), true },   // Anthropic
+            { 3, QStringLiteral("generativelanguage.googleapis.com"), true }, // Gemini
+        };
+        for (const Case &c : cases) {
+            Harness h;
+            h.settings.setAgentProviderType(c.type); // agentBaseUrl stays the localhost default
+            h.script = { { { doneText(QStringLiteral("ok")) } } };
+            auto vm = h.makeVm();
+
+            vm->sendMessage(QStringLiteral("hi")); // ensureSession() invokes the factory synchronously
+            QTRY_VERIFY(!vm->busy());
+
+            QCOMPARE(h.lastProviderType, c.type);
+            QCOMPARE(h.lastBaseUrl.host(), c.expectedHost);
+            // The remote-endpoint notice tracks the *effective* endpoint, not agentBaseUrl.
+            QCOMPARE(vm->endpointIsRemote(), c.remote);
+        }
     }
 
     void toolCallLoopRendersRows()
