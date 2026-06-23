@@ -30,6 +30,23 @@ T.TextField {
     selectedTextColor: Theme.colorOnPrimary
     opacity: control.enabled ? 1.0 : 0.4
 
+    // QtQuick.Templates.TextField does not render the placeholder itself — the style must supply
+    // it (the Controls styles do, via a PlaceholderText child). Without this element our
+    // placeholderText is silently invisible everywhere it is set.
+    Text {
+        x: control.leftPadding
+        y: control.topPadding
+        width: control.width - control.leftPadding - control.rightPadding
+        height: control.height - control.topPadding - control.bottomPadding
+        text: control.placeholderText
+        font: control.font
+        color: control.placeholderTextColor
+        verticalAlignment: control.verticalAlignment
+        visible: control.length === 0 && control.preeditText.length === 0
+        elide: Text.ElideRight
+        renderType: control.renderType
+    }
+
     background: Rectangle {
         implicitWidth: 160
         implicitHeight: 40

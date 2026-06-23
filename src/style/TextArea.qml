@@ -33,6 +33,22 @@ T.TextArea {
 
     wrapMode: TextEdit.Wrap
 
+    // QtQuick.Templates.TextArea does not render the placeholder itself — the style must supply it
+    // (like TextField.qml). Without this element placeholderText is silently invisible.
+    Text {
+        x: control.leftPadding
+        y: control.topPadding
+        width: control.width - control.leftPadding - control.rightPadding
+        height: control.height - control.topPadding - control.bottomPadding
+        text: control.placeholderText
+        font: control.font
+        color: control.placeholderTextColor
+        verticalAlignment: control.verticalAlignment
+        visible: control.length === 0 && control.preeditText.length === 0
+        elide: Text.ElideRight
+        renderType: control.renderType
+    }
+
     background: Rectangle {
         implicitWidth: 160
         implicitHeight: 96
