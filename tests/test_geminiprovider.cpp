@@ -186,6 +186,60 @@ private slots:
                  1024);
     }
 
+    void toolSchemaIsSanitizedForGemini()
+    {
+        // Gemini's functionDeclarations parser rejects JSON-Schema keywords it doesn't know
+        // (additionalProperties, $schema, …) with an "Invalid JSON payload / Unknown name"
+        // error — while OpenAI/Anthropic accept the same schema. The shared tool definitions
+        // stamp `additionalProperties: false` onto every schema, so the Gemini codec must strip
+        // it (top-level and nested) or every tool-enabled Gemini turn fails.
+        InferenceRequest request = simpleRequest();
+        QJsonObject nested{{QStringLiteral("type"), QStringLiteral("object")},
+                           {QStringLiteral("properties"),
+                            QJsonObject{{QStringLiteral("n"),
+                                         QJsonObject{{QStringLiteral("type"),
+                                                      QStringLiteral("integer")}}}}},
+                           {QStringLiteral("additionalProperties"), false}};
+        QJsonObject schema{
+            {QStringLiteral("type"), QStringLiteral("object")},
+            {QStringLiteral("$schema"), QStringLiteral("https://json-schema.org/draft/2020-12")},
+            {QStringLiteral("properties"),
+             QJsonObject{{QStringLiteral("q"),
+                          QJsonObject{{QStringLiteral("type"), QStringLiteral("string")}}},
+                         {QStringLiteral("opts"), nested}}},
+            {QStringLiteral("required"), QJsonArray{QStringLiteral("q")}},
+            {QStringLiteral("additionalProperties"), false}};
+        request.tools = {ToolSpec{QStringLiteral("list_plants"), QStringLiteral("d"), schema}};
+        m_server.setScript(sseScript(fixtures::geminiTextStream()));
+        GeminiProvider provider(config());
+        auto future = provider.generate(request);
+        QVERIFY(waitFinished(future));
+
+        const QJsonObject params = QJsonDocument::fromJson(m_server.lastRequestBody())
+                                       .object()
+                                       .value(QStringLiteral("tools"))
+                                       .toArray()
+                                       .first()
+                                       .toObject()
+                                       .value(QStringLiteral("functionDeclarations"))
+                                       .toArray()
+                                       .first()
+                                       .toObject()
+                                       .value(QStringLiteral("parameters"))
+                                       .toObject();
+        // Unsupported keywords gone, top-level and nested; the supported shape is preserved.
+        QVERIFY(!params.contains(QStringLiteral("additionalProperties")));
+        QVERIFY(!params.contains(QStringLiteral("$schema")));
+        QCOMPARE(params.value(QStringLiteral("type")).toString(), QStringLiteral("object"));
+        QVERIFY(params.value(QStringLiteral("required")).toArray().contains(QStringLiteral("q")));
+        const QJsonObject opts = params.value(QStringLiteral("properties"))
+                                     .toObject()
+                                     .value(QStringLiteral("opts"))
+                                     .toObject();
+        QVERIFY(!opts.contains(QStringLiteral("additionalProperties")));
+        QVERIFY(opts.value(QStringLiteral("properties")).toObject().contains(QStringLiteral("n")));
+    }
+
     void errorChunkSurfacesAsProviderError()
     {
         const auto events = runScript(sseScript(fixtures::geminiErrorChunkStream()));

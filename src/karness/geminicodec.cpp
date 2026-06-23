@@ -91,6 +91,34 @@ QJsonObject toolResponseContent(const Message &message)
                        {QStringLiteral("parts"), parts}};
 }
 
+// Gemini's functionDeclarations[].parameters is an OpenAPI 3.0 Schema *subset*, not full JSON
+// Schema: its proto-JSON parser rejects unknown keywords outright ("Invalid JSON payload
+// received. Unknown name "additionalProperties" … Cannot find field"). The OpenAI and Anthropic
+// dialects accept the very same schema verbatim — OpenAI even relies on additionalProperties for
+// strict mode — so the trimming belongs here, at the Gemini boundary, not in the shared tool
+// definitions. Drop the unsupported keywords, recursing into nested object/array subschemas.
+QJsonObject sanitizeSchema(QJsonObject schema)
+{
+    static const QStringList unsupported{QStringLiteral("additionalProperties"),
+                                         QStringLiteral("$schema"), QStringLiteral("$defs"),
+                                         QStringLiteral("definitions")};
+    for (const QString &key : unsupported)
+        schema.remove(key);
+    if (const QJsonValue props = schema.value(QStringLiteral("properties")); props.isObject()) {
+        const QJsonObject object = props.toObject();
+        QJsonObject sanitized;
+        for (auto it = object.begin(); it != object.end(); ++it) {
+            const QJsonValue value = it.value();
+            sanitized.insert(it.key(), value.isObject() ? QJsonValue(sanitizeSchema(value.toObject()))
+                                                        : value);
+        }
+        schema.insert(QStringLiteral("properties"), sanitized);
+    }
+    if (const QJsonValue items = schema.value(QStringLiteral("items")); items.isObject())
+        schema.insert(QStringLiteral("items"), sanitizeSchema(items.toObject()));
+    return schema;
+}
+
 } // namespace
 
 std::expected<QJsonObject, AgentError> encodeRequest(const InferenceRequest &request)
@@ -128,9 +156,10 @@ std::expected<QJsonObject, AgentError> encodeRequest(const InferenceRequest &req
     if (!request.tools.isEmpty()) {
         QJsonArray declarations;
         for (const ToolSpec &tool : request.tools)
-            declarations.append(QJsonObject{{QStringLiteral("name"), tool.name},
-                                            {QStringLiteral("description"), tool.description},
-                                            {QStringLiteral("parameters"), tool.inputSchema}});
+            declarations.append(
+                QJsonObject{{QStringLiteral("name"), tool.name},
+                            {QStringLiteral("description"), tool.description},
+                            {QStringLiteral("parameters"), sanitizeSchema(tool.inputSchema)}});
         body.insert(QStringLiteral("tools"),
                     QJsonArray{QJsonObject{{QStringLiteral("functionDeclarations"), declarations}}});
     }
